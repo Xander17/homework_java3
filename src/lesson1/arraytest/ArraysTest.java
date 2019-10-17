@@ -1,9 +1,8 @@
-package lesson1;
+package lesson1.arraytest;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
-public class Main {
+public class ArraysTest {
 
     public static void main(String[] args) {
         Integer[] arrI = {1, 2, 3, 4, 5, 6};
@@ -30,7 +29,7 @@ public class Main {
     }
 
     private static <T> ArrayList<T> toList(T[] arr) {
-        return new ArrayList<T>(Arrays.asList(arr));
+        return new ArrayList<T>(java.util.Arrays.asList(arr));
     }
 
     private static <T> void printArr(T[] arr) {
