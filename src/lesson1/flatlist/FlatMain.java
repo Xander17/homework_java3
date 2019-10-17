@@ -24,5 +24,7 @@ public class FlatMain {
             v.add(entry.getId());
             map.put(k, v);
         });
+
+        System.out.println(map);
     }
 }
