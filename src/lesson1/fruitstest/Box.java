@@ -1,5 +1,6 @@
 package lesson1.fruitstest;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 
 class Box<T extends Fruit> {
@@ -7,6 +8,16 @@ class Box<T extends Fruit> {
 
     Box() {
         fruits = new ArrayList<>();
+    }
+
+    Box(Class<T> c, int fruitsCount) {
+        fruits = new ArrayList<>();
+        try {
+            Constructor<T> constructor = c.getDeclaredConstructor();
+            for (int i = 0; i < fruitsCount; i++) fruits.add(constructor.newInstance());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     void addFruit(T fruit) {
@@ -29,6 +40,7 @@ class Box<T extends Fruit> {
 
     void print() {
         if (fruits.size() == 0) System.out.println("Пусто");
-        else System.out.println(fruits.get(0).getClass().getSimpleName() + "\t" + fruits.size() + "шт\tвес - " + getWeight());
+        else
+            System.out.println(fruits.get(0).getClass().getSimpleName() + "\t" + fruits.size() + "шт\tвес - " + getWeight());
     }
 }

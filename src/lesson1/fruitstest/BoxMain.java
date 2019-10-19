@@ -3,13 +3,14 @@ package lesson1.fruitstest;
 public class BoxMain {
 
     public static void main(String[] args) {
-        Box<Apple> boxApple1 = new Box<>();
-        Box<Apple> boxApple2 = new Box<>();
-        Box<Orange> boxOrange = new Box<>();
+        Box<Apple> boxApple1 = new Box<>(Apple.class, 15);
+        Box<Apple> boxApple2 = new Box<>(Apple.class, 10);
+        Box<Orange> boxOrange = new Box<>(Orange.class, 10);
 
-        for (int i = 0; i < 15; i++) boxApple1.addFruit(new Apple());
-        for (int i = 0; i < 10; i++) boxApple2.addFruit(new Apple());
-        for (int i = 0; i < 10; i++) boxOrange.addFruit(new Orange());
+//        for (int i = 0; i < 15; i++) boxApple1.addFruit(new Apple());
+//        for (int i = 0; i < 10; i++) boxApple2.addFruit(new Apple());
+//        for (int i = 0; i < 10; i++) boxOrange.addFruit(new Orange());
+
         System.out.print("boxApple1:\t");
         boxApple1.print();
         System.out.print("boxApple2:\t");
