@@ -23,12 +23,11 @@ public class FlatMain {
 
     private static HashMap<String, ArrayList<Integer>> listToMap(ArrayList<Flatlist> list) {
         HashMap<String, ArrayList<Integer>> map = new HashMap<>();
-        list.forEach(entry -> {
-            String k = entry.getName();
-            ArrayList<Integer> v = map.getOrDefault(k, new ArrayList<>());
-            v.add(entry.getId());
-            map.put(k, v);
-        });
+        list.forEach(entry -> map.computeIfAbsent(entry.getName(), k -> new ArrayList<>()).add(entry.getId()));
+//            String k = entry.getName();
+//            ArrayList<Integer> v = map.getOrDefault(k, new ArrayList<>());
+//            v.add(entry.getId());
+//            map.put(k, v);
         return map;
     }
 }
