@@ -8,15 +8,12 @@ import java.nio.file.Paths;
 public class ReverseReading {
     public static void main(String[] args) {
         File file = new File(Paths.get("src/lesson3/reversereading/burns.txt").toString());
-        long fileLen = file.length() - 1;
         StringBuilder s = new StringBuilder("\n");
         char c;
-        try {
-            RandomAccessFile in = new RandomAccessFile(file, "r");
-            while (fileLen >= 0) {
-                in.seek(fileLen);
+        try (RandomAccessFile in = new RandomAccessFile(file, "r")) {
+            for (long pos = file.length() - 1; pos >= 0; pos--) {
+                in.seek(pos);
                 c = (char) in.read();
-                fileLen--;
                 if (c == '\n') {
                     System.out.print(s.toString());
                     s = new StringBuilder();
