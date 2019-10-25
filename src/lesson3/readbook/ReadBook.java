@@ -1,6 +1,7 @@
 package lesson3.readbook;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Paths;
@@ -8,34 +9,39 @@ import java.util.Scanner;
 
 public class ReadBook {
     public static void main(String[] args) {
-        new ReadBook();
+        try {
+            new ReadBook();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static final int CHARS_PER_PAGE = 1800;
     private static final int CHARS_PER_LINE = 200;
 
-    private ReadBook() {
+    private ReadBook() throws IOException {
         File file = new File(Paths.get("src/lesson3/readbook/books.txt").toString());
+        RandomAccessFile in = new RandomAccessFile(file, "r");
+        Scanner console = new Scanner(System.in);
         int totalPages = (int) Math.ceil(file.length() / (1.0 * CHARS_PER_PAGE));
         int pageNum = 1;
-        try (RandomAccessFile in = new RandomAccessFile(file, "r"); Scanner csl = new Scanner(System.in)) {
-            getPage(in, pageNum);
-            while (true) {
-                System.out.println("--Страница " + pageNum + ". Всего страниц: " + totalPages + ". Введите номер страницы или выберите следующую '>' или предуыдущую '<': ");
-                String pageStr = csl.next();
-                if (pageStr.equalsIgnoreCase("exit")) break;
-                if (pageStr.matches("^\\d+$")) {
-                    int newPage = Integer.parseInt(pageStr);
-                    if (newPage > 0 && newPage <= totalPages) {
-                        pageNum = newPage;
-                        getPage(in, pageNum);
-                    }
-                } else if (pageStr.equals(">") && pageNum < totalPages) getPage(in, ++pageNum);
-                else if (pageStr.equals("<") && pageNum > 1) getPage(in, --pageNum);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+
+        getPage(in, pageNum);
+        while (true) {
+            System.out.println("--Страница " + pageNum + ". Всего страниц: " + totalPages + ". Введите номер страницы или выберите следующую '>' или предуыдущую '<': ");
+            String pageStr = console.next();
+            if (pageStr.equalsIgnoreCase("exit")) break;
+            if (pageStr.matches("^\\d+$")) {
+                int newPage = Integer.parseInt(pageStr);
+                if (newPage > 0 && newPage <= totalPages) {
+                    pageNum = newPage;
+                    getPage(in, pageNum);
+                }
+            } else if (pageStr.equals(">") && pageNum < totalPages) getPage(in, ++pageNum);
+            else if (pageStr.equals("<") && pageNum > 1) getPage(in, --pageNum);
         }
+        in.close();
+        console.close();
     }
 
     private void getPage(RandomAccessFile in, int page) throws IOException {
