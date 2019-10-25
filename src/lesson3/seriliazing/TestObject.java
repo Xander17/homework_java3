@@ -2,7 +2,6 @@ package lesson3.seriliazing;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class TestObject implements Serializable {
 

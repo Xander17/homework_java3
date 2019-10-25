@@ -7,11 +7,14 @@ import java.nio.file.Paths;
 import java.util.Scanner;
 
 public class ReadBook {
+    public static void main(String[] args) {
+        new ReadBook();
+    }
 
     private static final int CHARS_PER_PAGE = 1800;
     private static final int CHARS_PER_LINE = 200;
 
-    public static void main(String[] args) {
+    private ReadBook() {
         File file = new File(Paths.get("src/lesson3/readbook/books.txt").toString());
         int totalPages = (int) Math.ceil(file.length() / (1.0 * CHARS_PER_PAGE));
         int pageNum = 1;
@@ -33,10 +36,9 @@ public class ReadBook {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
-    private static void getPage(RandomAccessFile in, int page) throws IOException {
+    private void getPage(RandomAccessFile in, int page) throws IOException {
         in.seek(CHARS_PER_PAGE * (page - 1));
         byte[] b = new byte[CHARS_PER_PAGE];
         in.read(b, 0, CHARS_PER_PAGE);
@@ -47,7 +49,7 @@ public class ReadBook {
         System.out.println();
     }
 
-    private static void cutLines(StringBuilder s, int length) {
+    private void cutLines(StringBuilder s, int length) {
         int i = 0;
         while (true) {
             int i2 = s.indexOf("\n", i);

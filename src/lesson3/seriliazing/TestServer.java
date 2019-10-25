@@ -23,8 +23,8 @@ public class TestServer {
         while (socket == null) {
             socket = server.accept();
         }
-
         ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+
         TestObject testObject = (TestObject) in.readObject();
         System.out.println(testObject.getField1());
         System.out.println(testObject.getField2());
@@ -33,5 +33,7 @@ public class TestServer {
         ObjectOutputStream out = new ObjectOutputStream(System.out);
         out.writeObject(testObject);
 
+        in.close();
+        out.close();
     }
 }
