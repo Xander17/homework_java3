@@ -61,7 +61,7 @@ public class ReadBook {
             bytesForString.addAll(getByteList(b));
             s = new StringBuilder(getStringFromByteList(bytesForString));
             if (s.length() >= CHARS_PER_PAGE) {
-                while (pos < s.length() && (s.charAt(pos) != ' ' && s.charAt(pos) != '\n')) pos++;
+                while (pos < s.length() && (s.charAt(pos) != ' ' && s.charAt(pos) != '\n')) pos--;
                 s.setLength(pos);
                 abspos += s.toString().getBytes().length;
                 result.add(abspos);
