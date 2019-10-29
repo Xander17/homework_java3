@@ -3,10 +3,10 @@ package lesson4;
 import java.util.ArrayList;
 
 public class ABC {
-    private static final int REPEATS_COUNT = 3;
+    private static final int REPEATS_COUNT = 5;
 
     public static void main(String[] args) {
-        char[] letters = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
+        char[] letters = {'A', 'B', 'C'};
         ArrayList<Letter> list = new ArrayList<>();
         for (int i = 0; i < letters.length; i++) {
             list.add(new Letter(letters[i], i == 0));

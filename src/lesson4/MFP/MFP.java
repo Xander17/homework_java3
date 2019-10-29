@@ -1,39 +1,49 @@
 package lesson4.MFP;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Vector;
 
 public class MFP {
 
     private final int TIME_BETWEEN_PRINT = 500;
-    private final int TIME_BETWEEN_SCAN = 2000;
+    private final int TIME_BETWEEN_SCAN = 500;
     private final int TIME_ONE_PAGE_PRINT = 500;
-    private final int TIME_ONE_PAGE_SCAN = 500;
-    private final int TIME_TO_SEND_SCAN = 100;
+    private final int TIME_ONE_PAGE_SCAN = 1000;
+    private final int TIME_TO_SEND_SCAN_PAGE = 100;
     private final int TIME_TO_GET_PRINTED_DOC = 1000;
 
-    private final Printer printer;
-    private final Scanner scanner;
+    private final int MAX_PAPER_LOAD = 100;
+    private final int TIME_TO_LOAD_PAPER = 20000;
 
-    private Vector<PaperDocument> printResult;
-    private Vector<EDocument> scanCache;
+    private final PrinterUnit printer;
+    private final ScannerUnit scanner;
+
+    private final Vector<PaperDocument> printResult;
+    private final Vector<EDocument> scanCache;
+
+    private SimpleDateFormat dateFormat;
 
     public MFP() {
         printResult = new Vector<>();
         scanCache = new Vector<>();
-        printer = new Printer();
-        scanner = new Scanner();
+        printer = new PrinterUnit();
+        scanner = new ScannerUnit();
+        dateFormat = new SimpleDateFormat("[HH:mm:ss]");
         System.out.println("Запущено МФУ");
     }
 
     public void sendToPrinter(EDocument doc, int copies) {
         new Thread(() -> {
             PaperDocument paperDocument;
-            printer.addToList(doc, copies);
+            printer.addToQueue(doc, copies);
             try {
-                synchronized (printer) {
-                    while ((paperDocument = lookForPrintedDoc(doc, copies)) == null) printer.wait();
+                synchronized (printResult) {
+                    while ((paperDocument = lookForPrintedDoc(doc, copies)) == null) {
+                        printResult.wait();
+                    }
+                    getPrintedDoc(paperDocument, copies);
                 }
-                getPrintedDoc(paperDocument, copies);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -43,12 +53,12 @@ public class MFP {
     public void getFromScanner(PaperDocument doc) {
         new Thread(() -> {
             EDocument eDocument;
-            scanner.addToList(doc);
+            scanner.addToQueue(doc);
             try {
-                synchronized (scanner) {
-                    while ((eDocument = lookForScannedDoc(doc)) == null) scanner.wait();
+                synchronized (scanCache) {
+                    while ((eDocument = lookForScannedDoc(doc)) == null) scanCache.wait();
+                    sendEDoc(eDocument);
                 }
-                sendEDoc(eDocument);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -60,26 +70,30 @@ public class MFP {
             EDocument eDocument;
             PaperDocument paperDocument;
             try {
-                scanner.addToList(doc);
-                synchronized (scanner) {
-                    while ((eDocument = lookForScannedDoc(doc)) == null) scanner.wait();
+                scanner.addToQueue(doc);
+                synchronized (scanCache) {
+                    while ((eDocument = lookForScannedDoc(doc)) == null) scanCache.wait();
+                    removeScanFromCache(eDocument);
                 }
-                printer.addToList(eDocument, copies);
-                synchronized (printer) {
-                    while ((paperDocument = lookForPrintedDoc(eDocument, copies)) == null) printer.wait();
+                printMessage(String.format("Ксерокопируемый документ передан на принтер: %s %s", doc, getScanCacheInfo()), MessageType.IN, TaskType.SCAN);
+                printer.addToQueue(eDocument, copies);
+                synchronized (printResult) {
+                    while ((paperDocument = lookForPrintedDoc(eDocument, copies)) == null) printResult.wait();
+                    getCopiedDoc(paperDocument, copies);
                 }
-                getCopiedDoc(paperDocument, copies);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }).start();
     }
 
-    private class Printer extends Thread {
-        private Vector<EDocument> docList;
+    private class PrinterUnit extends Thread {
+        private final Vector<EDocument> docList;
+        private int paperLoad;
 
-        public Printer() {
+        public PrinterUnit() {
             docList = new Vector<>();
+            paperLoad = MAX_PAPER_LOAD;
             start();
         }
 
@@ -96,39 +110,58 @@ public class MFP {
             while (true) {
                 synchronized (this) {
                     while (docList.size() == 0) wait();
-                    print(docList.get(0));
                 }
+                print(docList.get(0));
                 Thread.sleep(TIME_BETWEEN_PRINT);
             }
         }
 
-        private synchronized void print(EDocument doc) throws InterruptedException {
-            System.out.println("Отправлено на печать: " + doc);
-            Thread.sleep(TIME_ONE_PAGE_PRINT * doc.getPages());
-            PaperDocument printed = new PaperDocument(doc.getName(), doc.getPages());
-            printResult.add(printed);
+        private void print(EDocument doc) throws InterruptedException {
+            printMessage("Отправлено на печать: " + doc, MessageType.IN, TaskType.PRINT);
+            for (int i = 0; i < doc.getPages(); i++) {
+                if (paperLoad <= 0) {
+                    System.out.println("Закончилась бумага");
+                    paperRequest();
+                }
+                Thread.sleep(TIME_ONE_PAGE_PRINT);
+                paperLoad -= 1;
+            }
+            PaperDocument printed = doc.getPrintedCopy();
             synchronized (docList) {
                 docList.remove(doc);
             }
-            System.out.println("Напечатано: " + printed);
-            notifyAll();
+            printMessage(String.format("Напечатано: %s %s", printed, getQueueInfo()), MessageType.OUT, TaskType.PRINT);
+            synchronized (printResult) {
+                printResult.add(printed);
+                printResult.notifyAll();
+            }
         }
 
-        private void addToList(EDocument doc, int copies) {
+        private void addToQueue(EDocument doc, int copies) {
             synchronized (docList) {
                 for (int i = 0; i < copies; i++) docList.add(doc);
             }
-            System.out.println("Добавлено в очередь на печать: " + doc + " в " + copies + "экз.");
+            printMessage(String.format("Добавлено в очередь на печать: %s в %dэкз. %s", doc, copies, getQueueInfo()), MessageType.IN, TaskType.PRINT);
             synchronized (this) {
-                notifyAll();
+                notify();
             }
+        }
+
+        private String getQueueInfo() {
+            return "Документов в очереди: " + docList.size();
+        }
+
+        private void paperRequest() throws InterruptedException {
+            Thread.sleep(TIME_TO_LOAD_PAPER);
+            paperLoad = MAX_PAPER_LOAD;
+            System.out.println("Бумага загружена");
         }
     }
 
-    private class Scanner extends Thread {
-        private Vector<PaperDocument> docList;
+    private class ScannerUnit extends Thread {
+        private final Vector<PaperDocument> docList;
 
-        public Scanner() {
+        public ScannerUnit() {
             docList = new Vector<>();
             start();
         }
@@ -153,25 +186,31 @@ public class MFP {
         }
 
         private void scan(PaperDocument doc) throws InterruptedException {
-            System.out.println("\tНачато сканирование: " + doc);
+            printMessage("Начато сканирование: " + doc, MessageType.IN, TaskType.SCAN);
             Thread.sleep(TIME_ONE_PAGE_SCAN * doc.getPages());
-            EDocument scanned = new EDocument(doc.getName(), doc.getPages());
-            scanCache.add(scanned);
+            EDocument scanned = doc.getScanCopy();
             synchronized (docList) {
                 docList.remove(doc);
             }
-            System.out.println("\tОтсканировано: " + scanned);
-            notifyAll();
+            printMessage(String.format("Отсканировано: %s %s", scanned, getQueueInfo()), MessageType.OUT, TaskType.SCAN);
+            synchronized (scanCache) {
+                scanCache.add(scanned);
+                scanCache.notifyAll();
+            }
         }
 
-        private void addToList(PaperDocument doc) {
+        private void addToQueue(PaperDocument doc) {
             synchronized (docList) {
                 docList.add(doc);
             }
-            System.out.println("\tДобавлено в очередь на сканирование: " + doc);
+            printMessage(String.format("Пользователь встал в очередь на сканирование: %s %s", doc, getQueueInfo()), MessageType.IN, TaskType.SCAN);
             synchronized (this) {
                 notifyAll();
             }
+        }
+
+        private String getQueueInfo() {
+            return "Пользователей в очереди: " + docList.size();
         }
     }
 
@@ -188,7 +227,7 @@ public class MFP {
         else return null;
     }
 
-    private synchronized void getPaperDoc(PaperDocument doc, int copies) throws InterruptedException {
+    private void getPaperDoc(PaperDocument doc) throws InterruptedException {
         Thread.sleep(TIME_TO_GET_PRINTED_DOC);
         for (int i = printResult.size() - 1; i >= 0; i--) {
             PaperDocument result = printResult.get(i);
@@ -199,13 +238,13 @@ public class MFP {
     }
 
     private void getPrintedDoc(PaperDocument doc, int copies) throws InterruptedException {
-        getPaperDoc(doc, copies);
-        System.out.println("Документ забрали из лотка: " + doc + " в " + copies + "экз.");
+        getPaperDoc(doc);
+        printMessage(String.format("Документ забрали из лотка: %s в %dэкз. %s", doc, copies, getPrintResultInfo()), MessageType.OUT, TaskType.PRINT);
     }
 
     private void getCopiedDoc(PaperDocument doc, int copies) throws InterruptedException {
-        getPaperDoc(doc, copies);
-        System.out.println("Отксеренный документ забрали из лотка: " + doc + " в " + copies + "экз.");
+        getPaperDoc(doc);
+        printMessage(String.format("Отксеренный документ забрали из лотка: %s в %dэкз. %s", doc, copies, getPrintResultInfo()), MessageType.OUT, TaskType.PRINT);
     }
 
     private EDocument lookForScannedDoc(PaperDocument doc) {
@@ -215,10 +254,40 @@ public class MFP {
         return null;
     }
 
-    private synchronized void sendEDoc(EDocument doc) throws InterruptedException {
-        Thread.sleep(TIME_TO_SEND_SCAN);
+    private void sendEDoc(EDocument doc) throws InterruptedException {
+        Thread.sleep(TIME_TO_SEND_SCAN_PAGE * doc.getPages());
         scanCache.remove(doc);
-        System.out.println("\tДокумент отправлен пользователю: " + doc);
+        printMessage(String.format("Документ отправлен пользователю: %s %s", doc, getScanCacheInfo()), MessageType.OUT, TaskType.SCAN);
     }
+
+    private void removeScanFromCache(EDocument doc) {
+        scanCache.remove(doc);
+    }
+
+    private String getPrintResultInfo() {
+        return "Документов в лотке: " + printResult.size();
+    }
+
+    private String getScanCacheInfo() {
+        return "Отсканированных документов в кэше: " + scanCache.size();
+    }
+
+    private String getTimeStamp() {
+        return dateFormat.format(new Date());
+    }
+
+    private void printMessage(String str, MessageType type, TaskType task) {
+        String typeStr;
+        String taskStr;
+        if (type == MessageType.IN) typeStr = "->";
+        else typeStr = "<-";
+        if (task == TaskType.PRINT) taskStr = "\t";
+        else taskStr = "\t\t";
+        System.out.println(String.format("%s %s%s%s", typeStr, getTimeStamp(), taskStr, str));
+    }
+
+    enum MessageType {IN, OUT}
+
+    enum TaskType {PRINT, SCAN}
 }
 

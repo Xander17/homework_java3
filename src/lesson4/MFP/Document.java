@@ -21,7 +21,7 @@ public abstract class Document {
 
     @Override
     public String toString() {
-        return type + " \"" + getName() + "\", " + getPages() + "стр.";
+        return type + " \"" + name + "\", " + pages + "стр.";
     }
 }
 
@@ -29,10 +29,18 @@ class PaperDocument extends Document {
     public PaperDocument(String name, int pages) {
         super("Бумажный документ", name, pages);
     }
+
+    public EDocument getScanCopy() {
+        return new EDocument(getName(), getPages());
+    }
 }
 
 class EDocument extends Document {
     public EDocument(String name, int pages) {
         super("Электронный документ", name, pages);
+    }
+
+    public PaperDocument getPrintedCopy() {
+        return new PaperDocument(getName(), getPages());
     }
 }

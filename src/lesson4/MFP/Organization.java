@@ -1,6 +1,6 @@
 package lesson4.MFP;
 
-import java.util.Scanner;
+import java.util.Random;
 
 public class Organization {
     public static void main(String[] args) {
@@ -11,22 +11,48 @@ public class Organization {
         }
     }
 
+    private final int MIN_DELAY = 2000;
+    private final int MAX_DELAY = 15000;
+    private final int MAX_PAGES = 10;
+    private final int MAX_COPIES = 3;
+
+    Random rnd = new Random();
+    private MFP mfp;
+    static int index=0;
+
     public Organization() throws InterruptedException {
-        MFP mfp = new MFP();
-        Thread.sleep(1000);
+        mfp = new MFP();
+        Thread.sleep(500);
         System.out.println("Начинаем работу");
-        Scanner scanner = new Scanner(System.in);
         int i = 0;
         while (true) {
-            scanner.nextLine();
-            mfp.sendToPrinter(new EDocument("Doc" + i, 5),2);
-            i++;
-            scanner.nextLine();
-            mfp.getFromScanner(new PaperDocument("Doc" + i, 5));
-            i++;
-            scanner.nextLine();
-            mfp.makeCopies(new PaperDocument("Doc" + i, 5),5);
-            i++;
+            getRandomTask();
+            getRandomDelay();
+        }
+    }
+
+    private void getRandomTask() {
+        int task = rnd.nextInt(3);
+        int pages = 1 + rnd.nextInt(MAX_PAGES);
+        int copies = 1 + rnd.nextInt(MAX_COPIES);
+        switch (task) {
+            case (0):
+                mfp.sendToPrinter(new EDocument("Document" + index, pages), copies);
+                break;
+            case (1):
+                mfp.getFromScanner(new PaperDocument("Document" + index, pages));
+                break;
+            case (2):
+                mfp.makeCopies(new PaperDocument("Document" + index, pages), copies);
+                break;
+        }
+    }
+
+    private void getRandomDelay() {
+        try {
+            Thread.sleep(MIN_DELAY + rnd.nextInt(MAX_DELAY - MIN_DELAY));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }
