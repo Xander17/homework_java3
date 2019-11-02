@@ -27,11 +27,11 @@ public class MainClass {
         for (Car car : cars) new Thread(car).start();
 
         try {
-            Car.countDownStart.await();
+            Car.cyclicBarrier.await();
             System.out.println("--- >>> СТАРТ <<< ---");
             Car.countDownFinish.await();
             System.out.println("--- >>> ГОНКА ЗАВЕРШЕНА <<< ---\n");
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | BrokenBarrierException e) {
             e.printStackTrace();
         }
         System.out.println("▀▄▀▄ РЕЗУЛЬТАТЫ ▀▄▀▄");
@@ -43,14 +43,12 @@ public class MainClass {
 
 class Car implements Runnable {
     private static int CARS_COUNT;
-    private static CyclicBarrier cyclicBarrier;
-    public static CountDownLatch countDownStart;
+    public static CyclicBarrier cyclicBarrier;
     public static CountDownLatch countDownFinish;
 
     static {
         CARS_COUNT = 0;
-        cyclicBarrier = new CyclicBarrier(MainClass.CARS_COUNT);
-        countDownStart = new CountDownLatch(MainClass.CARS_COUNT);
+        cyclicBarrier = new CyclicBarrier(MainClass.CARS_COUNT + 1);
         countDownFinish = new CountDownLatch(MainClass.CARS_COUNT);
     }
 
@@ -80,7 +78,6 @@ class Car implements Runnable {
             Thread.sleep(500 + (int) (Math.random() * 800));
             System.out.println(name + " готов");
             cyclicBarrier.await();
-            countDownStart.countDown();
             for (int i = 0; i < race.getStages().size(); i++) {
                 race.getStages().get(i).go(this);
             }
