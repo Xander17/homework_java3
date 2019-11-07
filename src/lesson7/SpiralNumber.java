@@ -3,10 +3,10 @@ package lesson7;
 public class SpiralNumber {
     public static void main(String[] args) {
         new SpiralNumber(3, 3, StartPoint.TOP_LEFT, true);
-        new SpiralNumber(5, 5, StartPoint.TOP_RIGHT, false);
-        new SpiralNumber(7, 7, StartPoint.BOTTOM_LEFT, true);
+        new SpiralNumber(5, 10, StartPoint.TOP_RIGHT, false);
+        new SpiralNumber(15, 7, StartPoint.BOTTOM_LEFT, true);
         new SpiralNumber(12, 12, StartPoint.BOTTOM_RIGHT, false);
-        new SpiralNumber(20, 20, StartPoint.TOP_LEFT, false);
+        new SpiralNumber(20, 5, StartPoint.TOP_LEFT, false);
     }
 
     enum StartPoint {TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT}
@@ -14,7 +14,7 @@ public class SpiralNumber {
     private int[][] array;
     private int rows;
     private int cols;
-    private int[] vector = new int[2];
+    private int[] vector;
     private int curVector;
     private int[] coords;
     private boolean clockwise;
@@ -24,8 +24,9 @@ public class SpiralNumber {
         this.rows = rows;
         this.cols = cols;
         this.clockwise = clockwise;
+        vector = new int[2];
         setStartSettings(startPoint);
-        array = getSpiralArray();
+        getSpiralArray();
         printArray();
     }
 
@@ -48,7 +49,7 @@ public class SpiralNumber {
         setNewVector();
     }
 
-    private int[][] getSpiralArray() {
+    private void getSpiralArray() {
         array = new int[rows][cols];
         int i = 1;
         while (i <= rows * cols) {
@@ -60,10 +61,10 @@ public class SpiralNumber {
             }
             addVector();
         }
-        return array;
     }
 
     private void setNewVector() {
+        curVector %= 4;
         vector[0] = (int) Math.sin(curVector * 0.5 * Math.PI);
         vector[1] = (int) Math.cos(curVector * 0.5 * Math.PI);
     }
@@ -72,8 +73,8 @@ public class SpiralNumber {
         int newX = coords[0] + vector[0];
         int newY = coords[1] + vector[1];
 
-        return newX < cols && newX >= 0 &&
-                newY < rows && newY >= 0 &&
+        return newX < rows && newX >= 0 &&
+                newY < cols && newY >= 0 &&
                 array[newX][newY] == 0;
     }
 
