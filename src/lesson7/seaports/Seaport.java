@@ -1,6 +1,8 @@
-package lesson8.seaports;
+package lesson7.seaports;
 
-import lesson8.seaports.cargo.Cargo;
+import lesson7.seaports.cargo.Cargo;
+
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Seaport {
 
@@ -10,6 +12,8 @@ public class Seaport {
     private Cargo cargo;
     private String name;
     private boolean isLoading = false;
+    private Shipment shipment;
+
 
     public boolean getLoadingToken() {
         synchronized (Seaport.class) {
@@ -21,36 +25,63 @@ public class Seaport {
         return false;
     }
 
-    public Seaport(String name, Cargo cargo) {
+    public Seaport(String name, Cargo cargo, Shipment shipment) {
         this.cargo = cargo;
         this.name = name;
+        this.shipment = shipment;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public Seaport(String name) {
-        this(name, null);
+    public Seaport(String name, Shipment shipment) {
+        this(name, null, shipment);
     }
 
     public void loadShip(Ship ship) throws InterruptedException {
-        System.out.println(String.format("Корабль '%s':\tпричалил в порт '%s'", ship.getShipName(), name));
+        if (cargo == null) return;
+
+        String shipName = ship.getShipName();
+        String cargoName = cargo.getType().NAME;
+
+        System.out.println(String.format("Корабль '%s':\tпричалил в порт '%s'", shipName, name));
         Thread.sleep(DOCKING_PAUSE);
-        System.out.println(String.format("Порт '%s':\tначинается загрузка в корабль '%s' -> %s", name, ship.getShipName(), cargo.getType().NAME));
-        int availableCargoAmount = Math.min(cargo.getAmount(), ship.getCargoCapacity());
+        System.out.println(String.format("Порт '%s':\tначинается загрузка в корабль '%s' -> %s", name, shipName, cargoName));
+
+        int availableCargoAmount = Math.min(cargo.getAmount(), cargo.getCountInVolume(ship.getCargoWeightCapacity()));
         Thread.sleep(PIECE_LOADTIME * availableCargoAmount);
-        cargo.decreaseAmount(availableCargoAmount);
-        ship.setCargo(Cargo.getNewCargo(cargo.getType(),availableCargoAmount));
-        System.out.println(String.format("Порт '%s':\tзагружено в корабль '%s' -> %dшт. %s", name, ship.getShipName(), availableCargoAmount, cargo.getType().NAME));
-        System.out.println(String.format("Порт '%s':\tна складе осталось -> %dшт. %s", name, cargo.getAmount(), cargo.getType().NAME));
+        ship.setCargo(Cargo.getNewCargo(cargo.getType(), availableCargoAmount));
+        cargoUnloadFromWarehouse(availableCargoAmount);
+
+        System.out.println(String.format("Порт '%s':\tзагружено в корабль '%s' -> %s %dшт.", name, shipName, cargoName, availableCargoAmount));
+        if (cargo == null) System.out.println(String.format("-> Порт '%s':\tсклад пуст", name));
+        else
+            System.out.println(String.format("Порт '%s':\tна складе осталось -> %s %dшт.", name, cargoName, cargo.getAmount()));
         Thread.sleep(DOCKING_PAUSE);
-        System.out.println(String.format("Корабль '%s':\tотчалил от порта '%s'", ship.getShipName(), name));
+        System.out.println(String.format("Корабль '%s':\tотчалил от порта '%s'", shipName, name));
         isLoading = false;
     }
 
-    public void unloadShip(Ship ship) {
+    public synchronized void unloadShip(Ship ship) throws InterruptedException {
+        if (ship.getCargo() == null) return;
+        String shipName = ship.getShipName();
+        String cargoName = ship.getCargo().getType().NAME;
 
+        System.out.println(String.format("Корабль '%s':\tпричалил в порт '%s'", shipName, name));
+        Thread.sleep(DOCKING_PAUSE);
+        int cargoAmount = ship.getCargo().getAmount();
+        System.out.println(String.format("Порт '%s':\tначинается разгрузка корабля '%s' -> %s %dшт.", name, shipName, cargoName, ship.getCargo().getAmount()));
+
+        Thread.sleep(PIECE_LOADTIME * cargoAmount);
+        ship.setCargo(null);
+
+        System.out.println(String.format("Порт '%s':\tкорабль '%s' полностью разгружен", name, shipName));
+        Thread.sleep(DOCKING_PAUSE);
+        System.out.println(String.format("Корабль '%s':\tотчалил от порта '%s'", shipName, name));
+    }
+
+    private void cargoUnloadFromWarehouse(int amount) {
+        if (cargo.decreaseAmount(amount) == 0) {
+            cargo = null;
+            shipment.setAvailablePortsCount(shipment.getAvailablePortsCount() - 1);
+        }
     }
 
     public Cargo getCargo() {

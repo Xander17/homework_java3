@@ -1,4 +1,4 @@
-package lesson8.seaports.cargo;
+package lesson7.seaports.cargo;
 
 public class Food extends Cargo {
     Food(int amount) {

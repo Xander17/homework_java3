@@ -1,4 +1,4 @@
-package lesson8.seaports.cargo;
+package lesson7.seaports.cargo;
 
 public abstract class Cargo {
     private double weightFactor;
@@ -11,16 +11,17 @@ public abstract class Cargo {
         this.amount = amount;
     }
 
-    public synchronized void decreaseAmount(int delta) {
-        this.amount -= delta;
+    public synchronized int decreaseAmount(int delta) {
+        amount -= delta;
+        return amount;
     }
 
     public synchronized int getAmount() {
         return amount;
     }
 
-    public double getWeightFactor() {
-        return weightFactor;
+    public int getCountInVolume(int amount) {
+        return (int) (amount / weightFactor);
     }
 
     public CargoType getType() {
