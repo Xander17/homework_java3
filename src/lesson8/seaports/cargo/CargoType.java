@@ -1,6 +1,6 @@
-package lesson8.seaports;
+package lesson8.seaports.cargo;
 
-enum CargoType {
+public enum CargoType {
     FOOD("Еда"),
     FUEL("Топливо"),
     CLOTHES("Одежда");

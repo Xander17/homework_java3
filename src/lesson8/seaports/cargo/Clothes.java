@@ -1,7 +1,7 @@
-package lesson8.seaports;
+package lesson8.seaports.cargo;
 
 public class Clothes extends Cargo {
-    public Clothes(int amount) {
+    Clothes(int amount) {
         super(CargoType.CLOTHES,0.8, amount);
     }
 }

@@ -1,7 +1,7 @@
-package lesson8.seaports;
+package lesson8.seaports.cargo;
 
 public class Food extends Cargo {
-    public Food(int amount) {
+    Food(int amount) {
         super(CargoType.FOOD, 1,  amount);
     }
 }
