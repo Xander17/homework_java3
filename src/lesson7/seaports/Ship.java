@@ -8,21 +8,20 @@ public class Ship extends Thread {
     private String name;
     private Shipment shipment;
 
-    public Ship(String name, int cargoWeightCapacity, Cargo cargo, Shipment shipment) {
+    public Ship(String name, int cargoWeightCapacity, Cargo cargo) {
         this.cargoWeightCapacity = cargoWeightCapacity;
         this.cargo = cargo;
         this.name = name;
-        this.shipment = shipment;
-        start();
     }
 
-    public Ship(String name, int cargoWeightCapacity, Shipment shipment) {
-        this(name, cargoWeightCapacity, null, shipment);
+    public Ship(String name, int cargoWeightCapacity) {
+        this(name, cargoWeightCapacity, null);
     }
 
     @Override
     public void run() {
         while (true) {
+            System.out.println(String.format("Корабль '%s':\tожидает свободный порт загрузки", name));
             Seaport port = shipment.getAvailablePort();
             if (port == null) break;
             try {
@@ -52,5 +51,9 @@ public class Ship extends Thread {
 
     public String getShipName() {
         return name;
+    }
+
+    public void setShipment(Shipment shipment) {
+        this.shipment = shipment;
     }
 }

@@ -4,13 +4,12 @@ import java.util.concurrent.Semaphore;
 
 public class SeaChannel {
     private final int TIME_TO_PASS = 3000;
-    private final int SHIPS_LIMIT = 2;
     private final int TIME_NEAR_CHANNEL = 1000;
 
     private Semaphore semaphore;
 
-    public SeaChannel() {
-        semaphore = new Semaphore(SHIPS_LIMIT);
+    public SeaChannel(int shipsLimit) {
+        semaphore = new Semaphore(shipsLimit);
     }
 
     public void passThrough(Ship ship) throws InterruptedException {

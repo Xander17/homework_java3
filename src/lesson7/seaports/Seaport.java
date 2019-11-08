@@ -14,6 +14,14 @@ public class Seaport {
     private boolean isLoading = false;
     private Shipment shipment;
 
+    public Seaport(String name, Cargo cargo) {
+        this.cargo = cargo;
+        this.name = name;
+    }
+
+    public Seaport(String name) {
+        this(name, null);
+    }
 
     public boolean getLoadingToken() {
         synchronized (Seaport.class) {
@@ -23,16 +31,6 @@ public class Seaport {
             }
         }
         return false;
-    }
-
-    public Seaport(String name, Cargo cargo, Shipment shipment) {
-        this.cargo = cargo;
-        this.name = name;
-        this.shipment = shipment;
-    }
-
-    public Seaport(String name, Shipment shipment) {
-        this(name, null, shipment);
     }
 
     public void loadShip(Ship ship) throws InterruptedException {
@@ -86,5 +84,9 @@ public class Seaport {
 
     public Cargo getCargo() {
         return cargo;
+    }
+
+    public void setShipment(Shipment shipment) {
+        this.shipment = shipment;
     }
 }
