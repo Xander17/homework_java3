@@ -20,7 +20,7 @@ public abstract class Cargo {
         return amount;
     }
 
-    public int getCountInVolume(int amount) {
+    public int getCountInWeight(int amount) {
         return (int) (amount / weightFactor);
     }
 

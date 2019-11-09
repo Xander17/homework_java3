@@ -40,8 +40,8 @@ public class Tests {
             if (method.isAnnotationPresent(Test.class)) methods.add(method);
         }
         methods.sort(Tests::compare);
-        methods.add(0, before);
-        methods.add(after);
+        if (before != null) methods.add(0, before);
+        if (after != null) methods.add(after);
     }
 
     private static void runMethods() throws ReflectiveOperationException {

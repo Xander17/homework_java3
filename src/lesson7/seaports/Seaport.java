@@ -2,8 +2,6 @@ package lesson7.seaports;
 
 import lesson7.seaports.cargo.Cargo;
 
-import java.util.concurrent.locks.ReentrantLock;
-
 public class Seaport {
 
     private final static int PIECE_LOADTIME = 10;
@@ -43,7 +41,7 @@ public class Seaport {
         Thread.sleep(DOCKING_PAUSE);
         System.out.println(String.format("Порт '%s':\tначинается загрузка в корабль '%s' -> %s", name, shipName, cargoName));
 
-        int availableCargoAmount = Math.min(cargo.getAmount(), cargo.getCountInVolume(ship.getCargoWeightCapacity()));
+        int availableCargoAmount = Math.min(cargo.getAmount(), cargo.getCountInWeight(ship.getCargoWeightCapacity()));
         Thread.sleep(PIECE_LOADTIME * availableCargoAmount);
         ship.setCargo(Cargo.getNewCargo(cargo.getType(), availableCargoAmount));
         cargoUnloadFromWarehouse(availableCargoAmount);
