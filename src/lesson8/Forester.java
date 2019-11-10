@@ -7,10 +7,10 @@ public class Forester {
     public static void main(String[] args) {
         Forester forester = new Forester();
         Forest forest = new Forest(20, 20);
-        forester.countForest(forest);
+        forester.countTrees(forest);
     }
 
-    private void countForest(Forest forest) {
+    private void countTrees(Forest forest) {
         TreeType[][] trees = forest.getForest();
 
         Map<TreeType, Integer> map = new HashMap<>();
@@ -20,7 +20,7 @@ public class Forester {
                 map.put(tree, map.getOrDefault(tree, 0) + 1);
             }
         }
-        map.forEach((k, v) -> System.out.println(k.NAME + " - " + v + "шт."));
+        map.forEach((treeType, count) -> System.out.println(treeType.NAME + " - " + count + "шт."));
     }
 }
 
